@@ -20,19 +20,35 @@
 
 /* -------- COLOR & FONT SETTINGS (edit these first!) -------- */
 :root {
-  /* Outside: the flower border */
-  --color-bg:        #f4f4f6;                  /* the white the flowers sit on   */
-  --flower-light:    #ffffff;                  /* the palest petals              */
-  --flower-mid:      #e6e6ea;                  /* soft grey petals               */
-  --flower-dark:     #c4c4cb;                  /* darker grey petals             */
-  --flower-edge:     #9e9ea7;                  /* petal outlines and centers     */
-  --flower-leaf:     #d2d4d6;                  /* leaves                         */
+  /* Outside: the flower border. Bloom colours are taken from the album's
+     flower frame (roses, pinks, peach, butter, lilac, white on green),
+     softened a little so they sit with the purple. script.js reads these. */
+  --color-bg:        #f6f3f1;                  /* the warm white the flowers sit on */
+  --bloom-rose:      #c9566a;
+  --bloom-pink:      #eaa5b6;
+  --bloom-peach:     #f2c3a2;
+  --bloom-butter:    #efd98f;
+  --bloom-lilac:     #b9a2dc;
+  --bloom-white:     #ffffff;
+  --leaf:            #a3b894;
+  --leaf-deep:       #6f8a68;
+  --stem:            #8ea383;
 
-  /* Center: the purple cover */
-  --cover-deep:      #1d0f2b;                  /* darkest purple, at the edges   */
-  --cover-mid:       #3d1a5c;                  /* main purple                    */
-  --cover-glow:      #7b45b0;                  /* light through the smoke        */
-  --smoke:           rgba(226, 214, 245, 0.16);/* smoke drifting in the purple   */
+  /* Center: the purple cover. It's tinted glass over the same flowers,
+     so the colours are see-through: thinnest at the edges, deepest in the middle. */
+  /* The scene's light, after the album's middle frame: an indigo night,
+     a violet stage light, bright lavender smoke and a cool blue haze. */
+  --night-top:       rgba(20, 17, 52, 0.93);   /* deep indigo sky, at the top    */
+  --night-mid:       rgba(58, 30, 102, 0.84);  /* violet, where the light falls  */
+  --night-floor:     rgba(12, 7, 20, 0.95);    /* near-black floor               */
+  --cover-mid:       rgba(46, 26, 88, 0.80);   /* the panel's own tint           */
+  --cover-edge:      rgba(56, 34, 110, 0.55);  /* thinner near the edges         */
+  --stage-light:     rgba(160, 84, 220, 0.50); /* violet light from above right  */
+  --smoke-bright:    rgba(236, 228, 255, 0.42);/* the lit billow of smoke        */
+  --smoke-soft:      rgba(184, 166, 240, 0.28);/* smoke further from the light   */
+  --haze:            rgba(72, 84, 176, 0.32);  /* cool blue haze                 */
+  --shade:           rgba(6, 3, 14, 0.55);     /* deep shadow at the sides       */
+  --smoke:           rgba(206, 196, 250, 0.16);/* smoke drifting in the scene    */
 
   /* Text, on the purple */
   --color-text:      #f6f3fa;                  /* main text color         */
@@ -134,7 +150,6 @@ a:hover {
   height: calc(100% + 1920px);
   background-image: var(--park-tile, none);
   background-size: 960px 960px;
-  filter: blur(0.6px);
   /* Two separate properties so across and down can move at different speeds. */
   animation:
     drift-across 436s linear infinite,
@@ -157,14 +172,19 @@ a:hover {
   animation-play-state: paused;
 }
 
-/* A thin white veil over the flowers, and a little grey toward the corners. */
+/*
+  The blanket, as in JayGUI: a veil over the flowers so they read as soft
+  colour rather than a picture. A faint purple haze in the middle ties the
+  flowers to the cover, so the two feel like one surface.
+*/
 .backdrop::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at center, transparent 55%, rgba(60, 60, 70, 0.10)),
-    rgba(255, 255, 255, 0.18);
+    radial-gradient(ellipse 60% 70% at center, rgba(123, 69, 176, 0.16), transparent 75%),
+    radial-gradient(ellipse at center, transparent 55%, rgba(70, 50, 80, 0.10)),
+    rgba(255, 252, 250, 0.30);
 }
 
 /* -------- THE SHEET OF GLASS -------- */
@@ -186,27 +206,48 @@ a:hover {
 /* -------- THE COVER (purple center) -------- */
 /*
   The cover is one tall purple panel framed by the flowers. It scrolls
-  with the page. Its ::before layer is smoke, drifting slowly.
+  with the page. It's made of the same glass as everything else, just
+  tinted purple: the drifting flowers show through it, blurred, and most
+  of all near its edges, so it melts into the border instead of sitting on it.
+  Its ::before layer is smoke, drifting slowly.
 */
 .cover {
   position: relative;
   isolation: isolate;          /* keeps the smoke layer inside the cover */
-  overflow: hidden;
+  overflow: hidden;            /* older browsers */
+  overflow: clip;              /* clips the smoke without making the cover its own
+                                  scroll box, so the nav still sticks and the
+                                  About/Projects links scroll the page */
   width: min(calc(var(--max-width) + 80px), calc(100% - 2 * var(--frame)));
   margin: 0 auto;
   padding: 1.25rem 2.5rem 0.5rem;
-  border-radius: 6px;
+  border-radius: calc(var(--radius) + 10px);
+  /*
+    The scene. The first six layers are "fixed": they stay put on the
+    screen while the content scrolls over them, so the panel is a window
+    onto one night scene, lit like the album's middle frame. The last layer
+    scrolls with the panel and keeps its edges thin, so the flowers show through.
+  */
   background:
-    radial-gradient(70% 45% at 50% 30%, var(--cover-glow), transparent 75%),
-    radial-gradient(90% 60% at 50% 100%, rgba(123, 69, 176, 0.45), transparent 70%),
-    linear-gradient(to bottom, var(--cover-mid), var(--cover-deep));
+    radial-gradient(26vw 20vh at 36% 66%, var(--smoke-bright), transparent 72%),
+    radial-gradient(34vw 26vh at 64% 74%, var(--smoke-soft), transparent 70%),
+    radial-gradient(40vw 40vh at 82% 12%, var(--stage-light), transparent 70%),
+    radial-gradient(70vw 45vh at 50% 52%, var(--haze), transparent 72%),
+    radial-gradient(22vw 70vh at 4% 45%, var(--shade), transparent 75%),
+    linear-gradient(to bottom, var(--night-top) 0%, var(--night-mid) 52%, var(--night-floor) 100%),
+    radial-gradient(120% 90% at 50% 45%, var(--cover-mid) 40%, var(--cover-edge) 100%);
+  background-attachment: fixed, fixed, fixed, fixed, fixed, fixed, scroll;
+  border: 1px solid var(--glass-edge);
+  -webkit-backdrop-filter: blur(28px) saturate(1.3);
+  backdrop-filter: blur(28px) saturate(1.3);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.7),        /* a thin white edge, like a print */
-    0 24px 60px -20px rgba(30, 20, 40, 0.55),   /* lifted off the flowers */
-    inset 0 0 120px rgba(10, 4, 18, 0.6);       /* darker toward the edges */
+    inset 0 1px 0 var(--glass-shine),           /* the same top shine as every glass pane */
+    inset 0 -80px 120px -60px rgba(140, 70, 200, 0.35), /* violet light on the floor */
+    0 0 90px -10px rgba(110, 70, 190, 0.45),    /* purple light spilling onto the flowers */
+    0 24px 60px -24px rgba(40, 20, 50, 0.45);
 }
 
-/* Smoke: soft lavender clouds that slowly roll back and forth. */
+/* Smoke: soft lavender and blue clouds that slowly roll back and forth over the scene. */
 .cover::before {
   content: "";
   position: absolute;
@@ -214,12 +255,33 @@ a:hover {
   z-index: -1;
   background:
     radial-gradient(35% 25% at 20% 30%, var(--smoke), transparent 70%),
-    radial-gradient(30% 20% at 75% 22%, var(--smoke), transparent 70%),
+    radial-gradient(30% 20% at 75% 22%, var(--haze), transparent 70%),
     radial-gradient(40% 25% at 60% 60%, var(--smoke), transparent 70%),
     radial-gradient(35% 22% at 25% 80%, var(--smoke), transparent 70%),
-    radial-gradient(30% 18% at 85% 88%, var(--smoke), transparent 70%);
+    radial-gradient(30% 18% at 85% 88%, var(--haze), transparent 70%);
   filter: blur(30px);
   animation: smoke 70s ease-in-out infinite alternate;
+}
+
+/*
+  Panels inside the scene keep the same grey-white glass, over a thin
+  layer of night, so white text stays readable where the smoke is brightest.
+*/
+.cover .glass {
+  background:
+    linear-gradient(to bottom, var(--glass-top), var(--glass-bottom)),
+    rgba(16, 10, 34, 0.30);
+}
+
+/*
+  Inside the cover, glass can only blur the scene, not the text scrolling
+  under it (the cover is glass itself). So the sticky nav gets a denser
+  night tint to hide what passes beneath it.
+*/
+.cover .navbar {
+  background:
+    linear-gradient(to bottom, var(--glass-top), var(--glass-bottom)),
+    rgba(22, 15, 46, 0.86);
 }
 
 @keyframes smoke {
