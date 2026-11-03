@@ -21,12 +21,26 @@
 
   <!-- This links your styles.css file to this page -->
   <link rel="stylesheet" href="styles.css" />
+
+  <!-- Paints the drifting flowers and the confetti. "defer" runs it after the page loads. -->
+  <script src="script.js" defer></script>
 </head>
 
 <body>
 
+  <!-- ===================== DRIFTING BACKDROP ===================== -->
+  <!-- A field of white and grey flowers behind everything. Styled under "THE FLOWER BORDER". -->
+  <div class="backdrop" aria-hidden="true"><div class="park"></div></div>
+
+  <!-- A faint sheet of glass laid over the whole page. It ignores clicks. -->
+  <div class="glass-sheet" aria-hidden="true"></div>
+
+  <!-- ===================== THE COVER ===================== -->
+  <!-- The purple panel in the middle. Everything you read sits inside it. -->
+  <div class="cover">
+
   <!-- ===================== NAVIGATION ===================== -->
-  <nav class="navbar">
+  <nav class="navbar glass">
     <!-- REPLACE: your name or a logo/initials -->
     <a href="#top" class="nav-logo">DJ!!!!</a>
 
@@ -41,7 +55,7 @@
   <!-- ===================== HERO / INTRO ===================== -->
   <header id="top" class="hero">
     <!-- REPLACE: your name -->
-    <h1>Hi, I'm Dj</h1>
+    <h1>Hi, I'm <span>Dj</span></h1>
 
     <!-- REPLACE: one sentence about who you are -->
     <p class="tagline">Tech developer building tools for a safer future. </p>
@@ -50,13 +64,13 @@
   </header>
 
   <!-- ===================== ABOUT ===================== -->
-  <section id="about" class="section">
+  <section id="about" class="section glass">
     <h2>About Me</h2>
     <!-- REPLACE: 2-3 sentences about your background, goals, and what you're learning -->
     <p>
       Unique thinker with a lifelong love of digital tools and using them to close accessibility gaps. 
       Skilled in troubleshooting, team collaboration, and delivering people first solutions. Currently completing a tech training program with hands-on experience in
-      project-based learning, mananaging over 70,000 lines of SQL Data and business applications. Passionate about continuous innovation and working on project teams.
+      project-based learning, managing over 70,000 lines of SQL Data and business applications. Passionate about continuous innovation and working on project teams.
 
     </p>
 
@@ -69,53 +83,88 @@
       <li>Github</li>
       <li>Structured Query Language (SQL)</li>
       <li>Python</li>
-      <li>Microsfoft Visual Studio Code IDE</li>
+      <li>Microsoft Visual Studio Code IDE</li>
       <li>Microsoft Suite: 365</li>
+    </ul>
+
+    <h3>From my projects</h3>
+    <!-- The stacks used in JayGUI, Openview and Synth -->
+    <ul class="skills-list">
+      <li>C++20</li>
+      <li>Qt 6</li>
+      <li>CMake</li>
+      <li>raylib</li>
+      <li>Audio DSP</li>
+      <li>OpenCV</li>
+      <li>OCR (RapidOCR, ONNX Runtime)</li>
+      <li>pywebview</li>
+      <li>PyInstaller</li>
     </ul>
   </section>
 
   <!-- ===================== PROJECTS ===================== -->
-  <section id="projects" class="section">
+  <section id="projects" class="section glass">
     <h2>Projects</h2>
 
     <div class="project-grid">
 
-      <!-- PROJECT CARD 1 — copy this whole block to add more projects -->
+      <!-- PROJECT CARD — copy this whole <article> block to add more projects -->
       <article class="project-card">
-        <!-- REPLACE: project name -->
-        <h3>[Project Name]</h3>
-        <!-- REPLACE: 1-2 sentences on what it is and what you built -->
-        <p>[What is this project? What did you build it with? What did you learn?]</p>
-        <!-- REPLACE: link to the live site or GitHub repo -->
-        <a href="[https://github.com/yourusername/project]" class="project-link">View Project</a>
+        <span class="project-key">JAY-1</span>
+        <h3>JayGUI</h3>
+        <p>
+          A desktop project-management app modeled on Jira, written in C++20 and Qt 6 for Windows and macOS.
+          Kanban boards with drag-and-drop, sub-tasks, due dates, and rich-text documents whose
+          requirements link to issues. No accounts or server: projects are files you export, import and merge.
+          The glass and spring motion on this page come from it.
+        </p>
+        <ul class="project-tags">
+          <li>C++20</li><li>Qt 6</li><li>CMake</li>
+        </ul>
+        <a href="https://github.com/dmoore-ui/JayGUI" class="project-link">View Project</a>
       </article>
 
-      <!-- PROJECT CARD 2 -->
       <article class="project-card">
-        <h3>[Project Name]</h3>
-        <p>[Short description of the project.]</p>
-        <a href="[https://github.com/yourusername/project]" class="project-link">View Project</a>
+        <span class="project-key">VIEW-1</span>
+        <h3>Openview</h3>
+        <p>
+          An offline comic reader for .cbz, .cbr and .cb7 files. <strong>Scope</strong> glides the camera
+          panel by panel, and the <strong>Bionic Eye</strong> reads each speech balloon with on-device OCR
+          and re-sets the words in bionic type, bolding the start of each word for easier reading.
+          Python core, HTML/CSS interface.
+        </p>
+        <ul class="project-tags">
+          <li>Python</li><li>OpenCV</li><li>OCR</li><li>HTML/CSS</li>
+        </ul>
+        <a href="https://github.com/dmoore-ui/Openview" class="project-link">View Project</a>
       </article>
 
-      <!-- PROJECT CARD 3 -->
       <article class="project-card">
-        <h3>[Project Name]</h3>
-        <p>[Short description of the project.]</p>
-        <a href="[https://github.com/yourusername/project]" class="project-link">View Project</a>
+        <span class="project-key">SYN-1</span>
+        <h3>Synth</h3>
+        <p>
+          A software synthesizer built lesson by lesson in C++ with raylib: a sine oscillator with a live
+          oscilloscope, notes and scales, envelopes, and waveshaping. A timing pass timestamps every key
+          press so notes start at the exact sample, with input read every 1&ndash;2&nbsp;ms at 3% CPU.
+        </p>
+        <ul class="project-tags">
+          <li>C++</li><li>raylib</li><li>Audio DSP</li>
+        </ul>
+        <a href="https://github.com/dmoore-ui/Synth" class="project-link">View Project</a>
       </article>
 
     </div>
   </section>
 
   <!-- ===================== CONTACT ===================== -->
-  <section id="contact" class="section">
+  <section id="contact" class="section glass">
     <h2>Get In Touch</h2>
     <p>[Want to work together or just say hi? Reach out.]</p>
 
     <ul class="contact-list">
       <!-- REPLACE: your real links. Delete any you don't use. -->
       <li><a href="mailto:[you@example.com]">Email</a></li>
-      <li><a href="[https://github.com/yourusername]">GitHub</a></li>
+      <li><a href="https://github.com/dmoore-ui">GitHub</a></li>
       <li><a href="[https://linkedin.com/in/yourusername]">LinkedIn</a></li>
     </ul>
   </section>
@@ -123,8 +172,10 @@
   <!-- ===================== FOOTER ===================== -->
   <footer class="footer">
     <!-- REPLACE: your name -->
-    <p>&copy; 2026 [Your Name]. Built with HTML, CSS, and GitHub Pages.</p>
+    <p>&copy; 2026 Dj. Built with HTML, CSS, and GitHub Pages.</p>
   </footer>
+
+  </div><!-- end .cover -->
 
 </body>
 </html>

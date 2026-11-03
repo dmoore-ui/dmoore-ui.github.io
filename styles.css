@@ -1,25 +1,72 @@
 /*
   ============================================================
-  PORTFOLIO STYLESHEET
+  PORTFOLIO STYLESHEET — flowers, a purple center, under glass
   ============================================================
   This file controls how your page LOOKS (colors, fonts, spacing).
   index.html controls what your page SAYS (the content).
 
+  The layout is like a framed record sleeve:
+    - OUTSIDE: a border of white and grey flowers, drifting slowly
+      (JayGUI's moving backdrop, with flowers instead of a park).
+    - CENTER:  one deep purple panel with soft smoke moving in it.
+      This is the only place purple really appears.
+    - ON TOP:  a faint sheet of glass over everything.
+  The elements (nav, sections, cards, tags) are grey and white glass,
+  and motion uses JayGUI's no-bounce spring.
+
   Want to change your colors? Edit the values under ":root" below.
-  Every color on the page comes from those few lines.
   ============================================================
 */
 
 /* -------- COLOR & FONT SETTINGS (edit these first!) -------- */
 :root {
-  --color-bg:      #6c6c6ca0;   /* page background        */
-  --color-text:    #1a1a1a;   /* main text color        */
-  --color-accent:  #9140ba95;   /* links & buttons        */
-  --color-muted:   #0f0f0f;   /* softer/secondary text  */
-  --color-card:    #f3f4f6;   /* project card background */
+  /* Outside: the flower border */
+  --color-bg:        #f4f4f6;                  /* the white the flowers sit on   */
+  --flower-light:    #ffffff;                  /* the palest petals              */
+  --flower-mid:      #e6e6ea;                  /* soft grey petals               */
+  --flower-dark:     #c4c4cb;                  /* darker grey petals             */
+  --flower-edge:     #9e9ea7;                  /* petal outlines and centers     */
+  --flower-leaf:     #d2d4d6;                  /* leaves                         */
+
+  /* Center: the purple cover */
+  --cover-deep:      #1d0f2b;                  /* darkest purple, at the edges   */
+  --cover-mid:       #3d1a5c;                  /* main purple                    */
+  --cover-glow:      #7b45b0;                  /* light through the smoke        */
+  --smoke:           rgba(226, 214, 245, 0.16);/* smoke drifting in the purple   */
+
+  /* Text, on the purple */
+  --color-text:      #f6f3fa;                  /* main text color         */
+  --color-muted:     #d2c8df;                  /* softer/secondary text   */
+  --color-accent:    #ffffff;                  /* links & highlights      */
+  --color-accent-hi: #e9ddff;                  /* links on hover          */
+  --color-on-accent: #24182f;                  /* text on the white button */
+
+  /* Grey & white glass: panels are clear, cards are foggier */
+  --glass-top:       rgba(255, 255, 255, 0.10);
+  --glass-bottom:    rgba(255, 255, 255, 0.04);
+  --glass-edge:      rgba(255, 255, 255, 0.22);
+  --glass-shine:     rgba(255, 255, 255, 0.35);
+  --card-top:        rgba(236, 234, 240, 0.17);
+  --card-bottom:     rgba(200, 196, 208, 0.11);
+  --card-hover:      rgba(245, 243, 248, 0.25);
+  --card-edge:       rgba(255, 255, 255, 0.26);
+  --shadow:          rgba(8, 2, 16, 0.55);
+  --blur:            16px;
 
   --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --max-width: 900px;         /* how wide the content gets */
+  --max-width: 960px;          /* how wide the content gets */
+  --frame:     40px;           /* how much flower border shows around the cover */
+  --radius:    14px;
+
+  /*
+    The spring. JayGUI steps a critically damped spring (stiffness 18) every
+    frame. CSS can't run physics, but linear() can trace the exact curve it
+    follows: x(t) = 1 - (1 + 18t)·e^(-18t), sampled over 0.4 seconds.
+  */
+  --spring: linear(0, 0.0369, 0.1219, 0.2275, 0.3374, 0.4422, 0.5372, 0.6204,
+                   0.6916, 0.7513, 0.8009, 0.8414, 0.8743, 0.9008, 0.922, 0.9389,
+                   0.9523, 0.9628, 0.9711, 0.9776, 0.9826, 0.9866, 0.9897, 0.992, 1);
+  --spring-time: 0.4s;
 }
 
 /* -------- BASE RESETS (leave these alone to start) -------- */
@@ -29,20 +76,167 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-main);
   color: var(--color-text);
   background-color: var(--color-bg);
   line-height: 1.6;
+  min-height: 100vh;
+  padding: var(--frame) 0;
 }
 
 a {
   color: var(--color-accent);
   text-decoration: none;
+  transition: color 0.2s;
 }
 
 a:hover {
-  text-decoration: underline;
+  color: var(--color-accent-hi);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* -------- THE FLOWER BORDER (drifting backdrop) -------- */
+/*
+  .backdrop sits behind the whole page and never scrolls.
+  .park holds the flower tile (painted by script.js). It is one tile
+  bigger than the screen, and slides one tile's width before looping,
+  so the loop is seamless.
+  The drift is a little diagonal, like JayGUI's: 2.2 px/s across, 1 px/s down.
+  960px ÷ 2.2 px/s ≈ 436s across; 960px ÷ 1 px/s = 960s down.
+*/
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  /* Fallback if the flowers can't be painted: soft grey pools on white. */
+  background:
+    radial-gradient(30vmax 30vmax at 10% 20%, #e2e2e6, transparent 70%),
+    radial-gradient(30vmax 30vmax at 85% 75%, #dcdce1, transparent 70%),
+    var(--color-bg);
+}
+
+.park {
+  position: absolute;
+  top: -960px;
+  left: -960px;
+  width: calc(100% + 1920px);
+  height: calc(100% + 1920px);
+  background-image: var(--park-tile, none);
+  background-size: 960px 960px;
+  filter: blur(0.6px);
+  /* Two separate properties so across and down can move at different speeds. */
+  animation:
+    drift-across 436s linear infinite,
+    drift-down   960s linear infinite;
+}
+
+@keyframes drift-across {
+  from { translate: 0 0; }
+  to   { translate: 960px 0; }
+}
+
+@keyframes drift-down {
+  from { transform: translateY(0); }
+  to   { transform: translateY(960px); }
+}
+
+/* JayGUI pauses the drift when its window isn't active. script.js adds this class when the tab is hidden. */
+.is-hidden .park,
+.is-hidden .cover::before {
+  animation-play-state: paused;
+}
+
+/* A thin white veil over the flowers, and a little grey toward the corners. */
+.backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(60, 60, 70, 0.10)),
+    rgba(255, 255, 255, 0.18);
+}
+
+/* -------- THE SHEET OF GLASS -------- */
+/* Laid over the whole page: two faint diagonal reflections. It never blocks clicks. */
+.glass-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg,
+      transparent 0%, transparent 18%,
+      rgba(255, 255, 255, 0.10) 24%, rgba(255, 255, 255, 0.02) 32%,
+      transparent 38%, transparent 64%,
+      rgba(255, 255, 255, 0.06) 70%, transparent 76%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 0 60px rgba(0, 0, 0, 0.06);
+}
+
+/* -------- THE COVER (purple center) -------- */
+/*
+  The cover is one tall purple panel framed by the flowers. It scrolls
+  with the page. Its ::before layer is smoke, drifting slowly.
+*/
+.cover {
+  position: relative;
+  isolation: isolate;          /* keeps the smoke layer inside the cover */
+  overflow: hidden;
+  width: min(calc(var(--max-width) + 80px), calc(100% - 2 * var(--frame)));
+  margin: 0 auto;
+  padding: 1.25rem 2.5rem 0.5rem;
+  border-radius: 6px;
+  background:
+    radial-gradient(70% 45% at 50% 30%, var(--cover-glow), transparent 75%),
+    radial-gradient(90% 60% at 50% 100%, rgba(123, 69, 176, 0.45), transparent 70%),
+    linear-gradient(to bottom, var(--cover-mid), var(--cover-deep));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.7),        /* a thin white edge, like a print */
+    0 24px 60px -20px rgba(30, 20, 40, 0.55),   /* lifted off the flowers */
+    inset 0 0 120px rgba(10, 4, 18, 0.6);       /* darker toward the edges */
+}
+
+/* Smoke: soft lavender clouds that slowly roll back and forth. */
+.cover::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  background:
+    radial-gradient(35% 25% at 20% 30%, var(--smoke), transparent 70%),
+    radial-gradient(30% 20% at 75% 22%, var(--smoke), transparent 70%),
+    radial-gradient(40% 25% at 60% 60%, var(--smoke), transparent 70%),
+    radial-gradient(35% 22% at 25% 80%, var(--smoke), transparent 70%),
+    radial-gradient(30% 18% at 85% 88%, var(--smoke), transparent 70%);
+  filter: blur(30px);
+  animation: smoke 70s ease-in-out infinite alternate;
+}
+
+@keyframes smoke {
+  from { transform: translate(-4%, 2%) scale(1); }
+  to   { transform: translate(4%, -3%) scale(1.08); }
+}
+
+/* -------- GLASS (shared by the nav and sections) -------- */
+/* Clear, lightly frosted grey-white glass with a bright top edge, like JayGUI's columns. */
+.glass {
+  background: linear-gradient(to bottom, var(--glass-top), var(--glass-bottom));
+  border: 1px solid var(--glass-edge);
+  box-shadow:
+    inset 0 1px 0 var(--glass-shine),   /* the shine along the top edge */
+    0 12px 32px -12px var(--shadow);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.1);
+  backdrop-filter: blur(var(--blur)) saturate(1.1);
 }
 
 /* -------- NAVIGATION BAR -------- */
@@ -50,33 +244,49 @@ a:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 1rem;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
   position: sticky;      /* stays at top when you scroll */
-  top: 0;
-  background-color: var(--color-bg);
+  top: calc(var(--frame) + 0.75rem);
+  z-index: 10;
 }
 
 .nav-logo {
-  font-weight: bold;
+  font-weight: 700;
   font-size: 1.2rem;
   color: var(--color-text);
+  letter-spacing: 0.02em;
 }
 
 .nav-links a {
   margin-left: 1.5rem;
+  color: var(--color-muted);
+}
+
+.nav-links a:hover {
   color: var(--color-text);
 }
 
 /* -------- HERO / INTRO SECTION -------- */
 .hero {
   text-align: center;
-  padding: 5rem 2rem;
+  padding: 6rem 1rem 4.5rem;
 }
 
 .hero h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+  text-shadow: 0 2px 24px rgba(10, 4, 18, 0.5);
+}
+
+/* Your name glows softly, like light through the smoke. */
+.hero h1 span {
+  color: var(--color-accent-hi);
+  text-shadow: 0 0 18px rgba(214, 190, 255, 0.55), 0 0 2px rgba(255, 255, 255, 0.6);
 }
 
 .tagline {
@@ -86,25 +296,35 @@ a:hover {
 }
 
 /* -------- BUTTONS -------- */
+/* A white pane: the brightest thing in the purple. */
 .button {
   display: inline-block;
-  background-color: var(--color-accent);
-  color: #ffffff;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
+  background: linear-gradient(to bottom, #ffffff, #e4e2e8);
+  color: var(--color-on-accent);
+  padding: 0.75rem 1.6rem;
+  border-radius: 999px;
   font-weight: 600;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12), 0 10px 26px -10px rgba(0, 0, 0, 0.6);
+  transition: transform var(--spring-time) var(--spring), box-shadow var(--spring-time) var(--spring);
 }
 
 .button:hover {
-  opacity: 0.9;
-  text-decoration: none;
+  color: var(--color-on-accent);
+  transform: translateY(-2px);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12), 0 16px 32px -12px rgba(0, 0, 0, 0.65);
+}
+
+.button:active {
+  transform: translateY(0) scale(0.97);
 }
 
 /* -------- GENERAL SECTIONS -------- */
+/* Each section is a glass panel floating in the purple. */
 .section {
   max-width: var(--max-width);
-  margin: 0 auto;          /* centers the section */
-  padding: 3rem 2rem;
+  margin: 0 auto 2rem;
+  padding: 2.5rem 2rem;
+  border-radius: calc(var(--radius) + 4px);
 }
 
 .section h2 {
@@ -126,41 +346,104 @@ a:hover {
 }
 
 .skills-list li {
-  background-color: var(--color-card);
-  padding: 0.4rem 0.9rem;
-  border-radius: 20px;
+  background: linear-gradient(to bottom, var(--card-top), var(--card-bottom));
+  border: 1px solid var(--card-edge);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
   font-size: 0.9rem;
 }
 
 /* -------- PROJECT CARDS -------- */
 .project-grid {
   display: grid;
-  /* Auto-fits as many cards per row as will fit, min 250px wide */
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  /* Auto-fits as many cards per row as will fit, min 260px wide */
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
   margin-top: 1.5rem;
 }
 
+/* Cards are the foggier panes. On hover they lift on the spring. */
 .project-card {
-  background-color: var(--color-card);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to bottom, var(--card-top), var(--card-bottom));
+  border: 1px solid var(--card-edge);
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 var(--glass-shine), 0 6px 18px -10px var(--shadow);
+  transition:
+    transform  var(--spring-time) var(--spring),
+    box-shadow var(--spring-time) var(--spring);
+}
+
+.project-card:hover,
+.project-card:focus-within {
+  transform: translateY(-4px);
+  background: linear-gradient(to bottom, var(--card-hover), var(--card-top));
+  box-shadow: inset 0 1px 0 var(--glass-shine), 0 18px 34px -14px var(--shadow);
 }
 
 .project-card h3 {
   margin-top: 0;
 }
 
+/* A small key above the title, like an issue key on a JayGUI card. */
+.project-key {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
+.project-card p {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.project-card strong {
+  color: var(--color-text);
+}
+
+.project-tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.project-tags li {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  color: var(--color-text);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .project-link {
   display: inline-block;
-  margin-top: 1rem;
+  margin-top: auto;      /* pins the link to the bottom of the card */
+  padding-top: 1rem;
   font-weight: 600;
+}
+
+.project-link::after {
+  content: "→";
+  display: inline-block;
+  margin-left: 0.35em;
+  transition: transform var(--spring-time) var(--spring);
+}
+
+.project-card:hover .project-link::after {
+  transform: translateX(4px);
 }
 
 /* -------- CONTACT LIST -------- */
 .contact-list {
   list-style: none;
   display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
   margin-top: 1rem;
 }
@@ -168,24 +451,54 @@ a:hover {
 /* -------- FOOTER -------- */
 .footer {
   text-align: center;
-  padding: 2rem;
+  padding: 1.5rem 1rem 2rem;
   color: var(--color-muted);
-  border-top: 1px solid #e5e7eb;
-  margin-top: 2rem;
+  font-size: 0.9rem;
+}
+
+/* -------- CONFETTI (the "Done" celebration) -------- */
+/* script.js drops these petals when you press "Tap in". */
+.confetti {
+  position: fixed;
+  width: var(--size);
+  height: var(--size);
+  background: var(--color);
+  border-radius: 50% 0;      /* a petal shape */
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* -------- REDUCE MOTION -------- */
+/* Like JayGUI's View > Reduce motion: no drift, no smoke, no springs, no confetti. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .park, .cover::before { animation: none; }
+  *, *::before, *::after {
+    transition-duration: 0s !important;
+  }
 }
 
 /* -------- MOBILE FRIENDLY -------- */
-/* When the screen is narrow (phones), stack things vertically */
+/* When the screen is narrow (phones), stack things vertically and shrink the border */
 @media (max-width: 600px) {
+  :root {
+    --frame: 16px;
+  }
+  .cover {
+    padding: 0.75rem 1rem 0.25rem;
+  }
   .navbar {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
   .nav-links a {
-    margin-left: 0;
-    margin-right: 1rem;
+    margin: 0 0.6rem;
   }
-  .hero h1 {
-    font-size: 2rem;
+  .hero {
+    padding: 4rem 0.5rem 3rem;
+  }
+  .section {
+    margin-bottom: 1.25rem;
+    padding: 1.75rem 1.25rem;
   }
 }
